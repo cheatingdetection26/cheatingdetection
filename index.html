@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ProctorAI – Intelligent Exam System</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #040812;
+    --bg2: #070d1a;
+    --bg3: #0a1224;
+    --panel: #0d1830;
+    --panel2: #111f3a;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --accent3: #10b981;
+    --danger: #ef4444;
+    --warn: #f59e0b;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --border: rgba(0,229,255,0.15);
+    --glow: 0 0 20px rgba(0,229,255,0.3);
+    --glow2: 0 0 20px rgba(124,58,237,0.4);
+    --red-glow: 0 0 30px rgba(239,68,68,0.6);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--text);font-family:'Rajdhani',sans-serif;overflow-x:hidden;}
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar{width:4px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--accent2);border-radius:2px;}
+
+  /* ── SECTIONS ── */
+  .screen{display:none;min-height:100vh;width:100%;}
+  .screen.active{display:flex;flex-direction:column;}
+
+  /* ── GRID BG ── */
+  .grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:
+      linear-gradient(rgba(0,229,255,.04) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(0,229,255,.04) 1px,transparent 1px);
+    background-size:40px 40px;}
+  .particles{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;}
+  .particle{position:absolute;width:2px;height:2px;background:var(--accent);border-radius:50%;opacity:0;animation:float var(--dur,8s) var(--delay,0s) infinite linear;}
+  @keyframes float{0%{transform:translateY(100vh) translateX(0);opacity:0;}10%{opacity:.6;}90%{opacity:.3;}100%{transform:translateY(-10vh) translateX(var(--dx,20px));opacity:0;}}
+
+  /* ── LOGO / HEADER ── */
+  .logo{font-family:'Orbitron',monospace;font-weight:900;font-size:2rem;letter-spacing:4px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .logo-sub{font-family:'Share Tech Mono',monospace;font-size:.75rem;color:var(--text2);letter-spacing:6px;text-transform:uppercase;}
+
+  /* ── CARD ── */
+  .card{background:linear-gradient(145deg,var(--panel),var(--panel2));
+    border:1px solid var(--border);border-radius:16px;padding:2rem;
+    box-shadow:0 8px 32px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.05);
+    position:relative;overflow:hidden;}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+
+  /* ── BUTTONS ── */
+  .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.75rem 1.75rem;
+    border:none;border-radius:8px;font-family:'Rajdhani',sans-serif;font-size:1rem;
+    font-weight:600;letter-spacing:1px;cursor:pointer;transition:all .3s;position:relative;overflow:hidden;}
+  .btn::after{content:'';position:absolute;inset:0;background:rgba(255,255,255,.1);opacity:0;transition:.3s;}
+  .btn:hover::after{opacity:1;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:linear-gradient(135deg,var(--accent2),#4f46e5);color:#fff;box-shadow:var(--glow2);}
+  .btn-primary:hover{box-shadow:0 0 30px rgba(124,58,237,.7);}
+  .btn-accent{background:linear-gradient(135deg,#0891b2,var(--accent));color:#000;box-shadow:var(--glow);}
+  .btn-accent:hover{box-shadow:0 0 30px rgba(0,229,255,.7);}
+  .btn-danger{background:linear-gradient(135deg,#dc2626,var(--danger));color:#fff;box-shadow:var(--red-glow);}
+  .btn-success{background:linear-gradient(135deg,#059669,var(--accent3));color:#fff;}
+  .btn-sm{padding:.5rem 1rem;font-size:.85rem;}
+  .btn-lg{padding:1rem 2.5rem;font-size:1.1rem;}
+
+  /* ── INPUTS ── */
+  .input-group{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1.2rem;}
+  .input-group label{font-size:.8rem;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-family:'Share Tech Mono',monospace;}
+  input,select,textarea{background:rgba(0,229,255,.05);border:1px solid var(--border);
+    border-radius:8px;padding:.75rem 1rem;color:var(--text);font-family:'Rajdhani',sans-serif;
+    font-size:1rem;width:100%;transition:.3s;outline:none;}
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,229,255,.1);}
+  select option{background:var(--panel);}
+
+  /* ── BADGES ── */
+  .badge{display:inline-block;padding:.2rem .6rem;border-radius:4px;font-size:.7rem;
+    font-family:'Share Tech Mono',monospace;letter-spacing:1px;text-transform:uppercase;font-weight:700;}
+  .badge-success{background:rgba(16,185,129,.2);color:var(--accent3);border:1px solid rgba(16,185,129,.3);}
+  .badge-danger{background:rgba(239,68,68,.2);color:var(--danger);border:1px solid rgba(239,68,68,.3);}
+  .badge-warn{background:rgba(245,158,11,.2);color:var(--warn);border:1px solid rgba(245,158,11,.3);}
+  .badge-info{background:rgba(0,229,255,.1);color:var(--accent);border:1px solid rgba(0,229,255,.2);}
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar{height:4px;background:rgba(255,255,255,.1);border-radius:2px;overflow:hidden;}
+  .progress-fill{height:100%;border-radius:2px;transition:width .5s ease;
+    background:linear-gradient(90deg,var(--accent2),var(--accent));}
+  .progress-fill.danger{background:linear-gradient(90deg,#dc2626,var(--danger));}
+  .progress-fill.warn{background:linear-gradient(90deg,#d97706,var(--warn));}
+
+  /* ── TRUST SCORE ── */
+  .trust-ring{width:80px;height:80px;position:relative;flex-shrink:0;}
+  .trust-ring svg{transform:rotate(-90deg);}
+  .trust-ring .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;}
+  .trust-text{font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--text2);letter-spacing:2px;}
+
+  /* ── TOAST ── */
+  #toast-container{position:fixed;top:1rem;right:1rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem;}
+  .toast{padding:.75rem 1.25rem;border-radius:8px;font-size:.9rem;font-weight:600;
+    animation:slideIn .3s ease,fadeOut .5s 3.5s ease forwards;border-left:3px solid;
+    backdrop-filter:blur(10px);max-width:320px;}
+  @keyframes slideIn{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+  @keyframes fadeOut{to{opacity:0;transform:translateX(100%);}}
+  .toast-warn{background:rgba(245,158,11,.15);border-color:var(--warn);color:var(--warn);}
+  .toast-danger{background:rgba(239,68,68,.15);border-color:var(--danger);color:var(--danger);}
+  .toast-success{background:rgba(16,185,129,.15);border-color:var(--accent3);color:var(--accent3);}
+  .toast-info{background:rgba(0,229,255,.1);border-color:var(--accent);color:var(--accent);}
+
+  /* ══════════════════════════════════
+     LOGIN SCREEN
+  ══════════════════════════════════ */
+  #login-screen{align-items:center;justify-content:center;padding:2rem;}
+  .login-wrap{display:grid;grid-template-columns:1fr 1fr;gap:3rem;max-width:900px;width:100%;align-items:center;position:relative;z-index:1;}
+  .login-hero{text-align:center;}
+  .login-hero .icon-big{font-size:6rem;animation:pulse-icon 3s infinite;}
+  @keyframes pulse-icon{0%,100%{transform:scale(1);filter:drop-shadow(0 0 10px var(--accent));}50%{transform:scale(1.05);filter:drop-shadow(0 0 25px var(--accent));}}
+  .hero-title{font-family:'Orbitron',monospace;font-size:2.5rem;font-weight:900;line-height:1.1;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:1rem 0 .5rem;}
+  .hero-subtitle{color:var(--text2);font-size:1rem;line-height:1.6;}
+  .feature-pills{display:flex;flex-wrap:wrap;gap:.5rem;margin-top:1.5rem;justify-content:center;}
+  .pill{padding:.3rem .8rem;border-radius:20px;font-size:.75rem;font-family:'Share Tech Mono',monospace;
+    background:rgba(0,229,255,.08);border:1px solid var(--border);color:var(--accent);letter-spacing:1px;}
+  .login-card{padding:2.5rem;}
+  .tabs{display:flex;background:rgba(0,0,0,.3);border-radius:8px;padding:4px;margin-bottom:2rem;}
+  .tab-btn{flex:1;padding:.6rem;border:none;background:transparent;color:var(--text2);
+    font-family:'Rajdhani',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer;
+    border-radius:6px;transition:.3s;letter-spacing:1px;}
+  .tab-btn.active{background:var(--accent2);color:#fff;box-shadow:var(--glow2);}
+  .tab-pane{display:none;}
+  .tab-pane.active{display:block;}
+
+  /* ══════════════════════════════════
+     INSTRUCTIONS SCREEN
+  ══════════════════════════════════ */
+  #instructions-screen{padding:2rem;align-items:center;justify-content:center;}
+  .instructions-wrap{max-width:800px;width:100%;position:relative;z-index:1;}
+  .inst-header{text-align:center;margin-bottom:2rem;}
+  .rules-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.5rem 0;}
+  .rule-card{padding:1.25rem;border-radius:12px;display:flex;gap:1rem;align-items:flex-start;
+    background:linear-gradient(145deg,rgba(13,24,48,.8),rgba(17,31,58,.8));
+    border:1px solid var(--border);position:relative;overflow:hidden;
+    animation:fadeUp .5s ease both;}
+  .rule-card::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;}
+  .rule-card.dont::before{background:var(--danger);}
+  .rule-card.ok::before{background:var(--accent3);}
+  .rule-icon{font-size:2rem;flex-shrink:0;line-height:1;}
+  .rule-title{font-weight:700;font-size:1rem;margin-bottom:.2rem;}
+  .rule-desc{font-size:.85rem;color:var(--text2);line-height:1.5;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+  .countdown-bar{background:rgba(0,229,255,.08);border:1px solid var(--border);border-radius:8px;padding:1rem;
+    display:flex;align-items:center;gap:1rem;margin-top:1.5rem;}
+  .count-num{font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;color:var(--accent);min-width:2.5rem;text-align:center;}
+
+  /* ══════════════════════════════════
+     SETUP SCREEN
+  ══════════════════════════════════ */
+  #setup-screen{padding:2rem;align-items:center;justify-content:center;}
+  .setup-wrap{max-width:700px;width:100%;position:relative;z-index:1;}
+  .subject-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem;margin:1rem 0;}
+  .subj-card{padding:1rem;border-radius:10px;border:2px solid var(--border);
+    background:rgba(13,24,48,.6);cursor:pointer;text-align:center;transition:.3s;
+    font-weight:600;font-size:.9rem;}
+  .subj-card:hover{border-color:var(--accent2);background:rgba(124,58,237,.1);}
+  .subj-card.selected{border-color:var(--accent);background:rgba(0,229,255,.1);box-shadow:var(--glow);}
+  .subj-icon{font-size:1.75rem;margin-bottom:.4rem;}
+  .mode-cards{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1rem 0;}
+  .mode-card{padding:1.25rem;border-radius:12px;border:2px solid var(--border);
+    background:rgba(13,24,48,.6);cursor:pointer;transition:.3s;text-align:center;}
+  .mode-card:hover{border-color:var(--accent2);}
+  .mode-card.selected{border-color:var(--accent3);background:rgba(16,185,129,.08);box-shadow:0 0 15px rgba(16,185,129,.2);}
+
+  /* ══════════════════════════════════
+     EXAM SCREEN
+  ══════════════════════════════════ */
+  #exam-screen{padding:0;}
+  .exam-layout{display:grid;grid-template-rows:auto 1fr auto;min-height:100vh;position:relative;z-index:1;}
+  .exam-topbar{display:flex;align-items:center;gap:1rem;padding:.75rem 1.5rem;
+    background:rgba(7,13,26,.9);border-bottom:1px solid var(--border);backdrop-filter:blur(10px);
+    position:sticky;top:0;z-index:100;flex-wrap:wrap;}
+  .exam-topbar .logo{font-size:1.1rem;letter-spacing:3px;}
+  .topbar-spacer{flex:1;}
+  .timer-display{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:700;
+    padding:.3rem .8rem;background:rgba(0,229,255,.05);border:1px solid var(--border);
+    border-radius:6px;letter-spacing:2px;min-width:7rem;text-align:center;}
+  .timer-display.warn{color:var(--warn);border-color:var(--warn);animation:blink .8s infinite;}
+  .timer-display.danger{color:var(--danger);border-color:var(--danger);animation:blink .4s infinite;}
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.5;}}
+
+  /* Camera & Trust sidebar */
+  .exam-body{display:grid;grid-template-columns:1fr 260px;gap:1.5rem;padding:1.5rem;align-items:start;}
+  .exam-sidebar{display:flex;flex-direction:column;gap:1rem;position:sticky;top:80px;}
+  .cam-box{border-radius:12px;overflow:hidden;border:2px solid var(--border);position:relative;background:#000;aspect-ratio:4/3;}
+  .cam-box video{width:100%;height:100%;object-fit:cover;display:block;}
+  .cam-overlay{position:absolute;inset:0;pointer-events:none;}
+  .cam-status{position:absolute;bottom:.5rem;left:.5rem;right:.5rem;display:flex;gap:.4rem;flex-wrap:wrap;}
+  .cam-label{font-size:.65rem;font-family:'Share Tech Mono',monospace;padding:.2rem .5rem;
+    background:rgba(0,0,0,.8);border-radius:4px;letter-spacing:1px;}
+  .cam-label.ok{color:var(--accent3);}
+  .cam-label.bad{color:var(--danger);animation:blink .6s infinite;}
+  .face-box-overlay{position:absolute;top:0;left:0;pointer-events:none;}
+  canvas#face-canvas{position:absolute;top:0;left:0;width:100%;height:100%;}
+
+  .trust-panel{padding:1rem;}
+  .trust-display{display:flex;align-items:center;gap:1rem;margin-bottom:.75rem;}
+  .alerts-list{display:flex;flex-direction:column;gap:.4rem;max-height:180px;overflow-y:auto;}
+  .alert-item{font-size:.75rem;font-family:'Share Tech Mono',monospace;padding:.3rem .5rem;
+    background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);border-radius:4px;
+    color:var(--danger);display:flex;gap:.4rem;}
+  .alert-time{color:var(--text2);flex-shrink:0;}
+
+  /* Question area */
+  .question-area{min-width:0;}
+  .qpanel{animation:qSlide .4s ease;}
+  @keyframes qSlide{from{opacity:0;transform:translateX(30px);}to{opacity:1;transform:translateX(0);}}
+  .q-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:.5rem;}
+  .q-num{font-family:'Orbitron',monospace;font-size:.85rem;color:var(--accent2);letter-spacing:2px;}
+  .q-subject{font-size:.8rem;color:var(--text2);font-family:'Share Tech Mono',monospace;}
+  .q-text{font-size:1.15rem;font-weight:600;line-height:1.6;margin-bottom:1.5rem;color:var(--text);}
+  .options-list{display:flex;flex-direction:column;gap:.75rem;}
+  .option{display:flex;align-items:center;gap:1rem;padding:1rem 1.25rem;border-radius:10px;
+    border:2px solid var(--border);background:rgba(13,24,48,.6);cursor:pointer;
+    transition:.3s;font-size:.95rem;font-weight:500;position:relative;overflow:hidden;}
+  .option:hover{border-color:var(--accent2);background:rgba(124,58,237,.08);}
+  .option.selected{border-color:var(--accent);background:rgba(0,229,255,.08);}
+  .option.correct{border-color:var(--accent3)!important;background:rgba(16,185,129,.12)!important;}
+  .option.wrong{border-color:var(--danger)!important;background:rgba(239,68,68,.08)!important;}
+  .opt-key{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,.3);font-family:'Orbitron',monospace;font-size:.8rem;flex-shrink:0;font-weight:700;}
+  .option.selected .opt-key{background:var(--accent2);color:#fff;}
+  .option.correct .opt-key{background:var(--accent3);color:#fff;}
+  .option.wrong .opt-key{background:var(--danger);color:#fff;}
+  .correct-label{font-size:.75rem;color:var(--accent3);font-family:'Share Tech Mono',monospace;margin-top:.4rem;}
+
+  /* Nav dots */
+  .q-nav-dots{display:flex;flex-wrap:wrap;gap:.4rem;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);}
+  .q-dot{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    font-size:.75rem;font-family:'Orbitron',monospace;cursor:pointer;border:1px solid var(--border);
+    background:rgba(13,24,48,.6);transition:.3s;font-weight:700;}
+  .q-dot.current{border-color:var(--accent);color:var(--accent);box-shadow:0 0 8px rgba(0,229,255,.4);}
+  .q-dot.answered{background:rgba(124,58,237,.2);border-color:var(--accent2);color:var(--accent2);}
+
+  .exam-bottombar{padding:1rem 1.5rem;background:rgba(7,13,26,.9);border-top:1px solid var(--border);
+    display:flex;align-items:center;gap:1rem;flex-wrap:wrap;}
+
+  /* Exam Link paste */
+  .exam-link-box{background:rgba(0,229,255,.05);border:1px dashed rgba(0,229,255,.2);
+    border-radius:8px;padding:.6rem 1rem;display:flex;align-items:center;gap:.5rem;flex:1;min-width:200px;}
+  .exam-link-box input{background:transparent;border:none;font-size:.8rem;color:var(--text2);flex:1;padding:0;}
+  .exam-link-box input:focus{box-shadow:none;border:none;}
+  .link-label{font-size:.65rem;color:var(--accent);font-family:'Share Tech Mono',monospace;white-space:nowrap;}
+
+  /* ══════════════════════════════════
+     TERMINATED SCREEN
+  ══════════════════════════════════ */
+  #terminated-screen{align-items:center;justify-content:center;padding:2rem;
+    background:rgba(220,38,38,.08);position:relative;}
+  .term-glow{position:fixed;inset:0;background:radial-gradient(ellipse at center,rgba(220,38,38,.2) 0%,transparent 70%);
+    animation:termPulse 1s infinite alternate;pointer-events:none;z-index:0;}
+  @keyframes termPulse{from{opacity:.5;}to{opacity:1;}}
+  .term-wrap{text-align:center;position:relative;z-index:1;max-width:600px;}
+  .term-icon{font-size:8rem;animation:shake .3s infinite;}
+  @keyframes shake{0%,100%{transform:rotate(-5deg);}50%{transform:rotate(5deg);}}
+  .term-title{font-family:'Orbitron',monospace;font-size:3rem;font-weight:900;color:var(--danger);
+    text-shadow:0 0 30px var(--danger),0 0 60px var(--danger);animation:termBlink .5s infinite;}
+  @keyframes termBlink{0%,100%{opacity:1;}50%{opacity:.7;}}
+  .siren{display:flex;gap:1rem;justify-content:center;margin:1.5rem 0;}
+  .siren-light{width:60px;height:60px;border-radius:50%;animation:sirenAlt 1s infinite;}
+  .siren-light.red{background:var(--danger);box-shadow:0 0 30px var(--danger);}
+  .siren-light.blue{background:#3b82f6;box-shadow:0 0 30px #3b82f6;}
+  @keyframes sirenAlt{0%,100%{opacity:1;}50%{opacity:.1;}}
+  .siren-light.blue{animation-delay:.5s;}
+
+  /* ══════════════════════════════════
+     RESULT SCREEN
+  ══════════════════════════════════ */
+  #result-screen{padding:2rem;align-items:center;justify-content:flex-start;}
+  .result-wrap{max-width:1000px;width:100%;position:relative;z-index:1;margin:0 auto;}
+  .result-hero{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:1.5rem 0;}
+  .stat-box{padding:1.5rem;text-align:center;}
+  .stat-val{font-family:'Orbitron',monospace;font-size:2.5rem;font-weight:900;margin-bottom:.3rem;}
+  .stat-label{font-size:.8rem;color:var(--text2);letter-spacing:2px;font-family:'Share Tech Mono',monospace;text-transform:uppercase;}
+  .green{color:var(--accent3);}
+  .red{color:var(--danger);}
+  .blue{color:var(--accent);}
+  .purple{color:var(--accent2);}
+
+  /* REPORT TABLE */
+  .table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border);}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;}
+  thead tr{background:rgba(124,58,237,.15);border-bottom:1px solid var(--border);}
+  th{padding:.75rem 1rem;text-align:left;font-family:'Share Tech Mono',monospace;font-size:.7rem;
+    letter-spacing:2px;text-transform:uppercase;color:var(--accent2);}
+  tbody tr{border-bottom:1px solid rgba(255,255,255,.04);transition:.2s;}
+  tbody tr:hover{background:rgba(255,255,255,.03);}
+  td{padding:.65rem 1rem;color:var(--text2);}
+  td.danger{color:var(--danger);}
+  td.success{color:var(--accent3);}
+  td.warn{color:var(--warn);}
+
+  /* Q review */
+  .q-review{margin-bottom:1.5rem;}
+  .q-review-header{display:flex;align-items:center;gap.5rem;margin-bottom:.75rem;flex-wrap:wrap;gap:.5rem;}
+  .q-review-text{font-size:1rem;font-weight:600;margin-bottom:.75rem;}
+  .review-opts{display:flex;flex-direction:column;gap:.4rem;}
+  .review-opt{padding:.5rem .75rem;border-radius:6px;font-size:.85rem;display:flex;align-items:center;gap.5rem;gap:.5rem;}
+  .review-opt.correct{background:rgba(16,185,129,.1);color:var(--accent3);border:1px solid rgba(16,185,129,.2);}
+  .review-opt.wrong{background:rgba(239,68,68,.08);color:var(--danger);border:1px solid rgba(239,68,68,.2);}
+  .review-opt.unselected{background:rgba(255,255,255,.03);color:var(--text2);border:1px solid rgba(255,255,255,.05);}
+  .review-icon{font-size:1rem;flex-shrink:0;}
+
+  /* ══ UTILITY ══ */
+  .text-center{text-align:center;}
+  .mt1{margin-top:.5rem;} .mt2{margin-top:1rem;} .mt3{margin-top:1.5rem;} .mt4{margin-top:2rem;}
+  .mb1{margin-bottom:.5rem;} .mb2{margin-bottom:1rem;}
+  .flex{display:flex;} .flex-col{flex-direction:column;} .gap1{gap:.5rem;} .gap2{gap:1rem;}
+  .items-center{align-items:center;} .justify-between{justify-content:space-between;} .justify-center{justify-content:center;}
+  .flex-wrap{flex-wrap:wrap;}
+  .hidden{display:none!important;}
+  .w100{width:100%;}
+  .divider{border:none;border-top:1px solid var(--border);margin:1.5rem 0;}
+  .section-title{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;
+    color:var(--accent);letter-spacing:2px;margin-bottom:1rem;display:flex;align-items:center;gap.5rem;gap:.5rem;}
+  .section-title::before{content:'';display:inline-block;width:3px;height:1em;background:var(--accent);border-radius:2px;}
+  h2.page-title{font-family:'Orbitron',monospace;font-size:1.75rem;font-weight:700;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;background-clip:text;margin-bottom:.4rem;}
+  p.page-sub{color:var(--text2);font-size:.95rem;line-height:1.6;}
+
+  /* SUSPICIOUS FLASH OVERLAY */
+  #suspicious-flash{position:fixed;inset:0;background:rgba(239,68,68,.3);
+    pointer-events:none;z-index:9999;opacity:0;transition:.2s;}
+  #suspicious-flash.active{animation:flashRed .6s ease;}
+  @keyframes flashRed{0%{opacity:.8;}100%{opacity:0;}}
+
+  /* LOOK-AWAY OVERLAY */
+  #lookaway-overlay{position:fixed;inset:0;background:rgba(245,158,11,.15);
+    border:4px solid var(--warn);pointer-events:none;z-index:998;opacity:0;transition:.5s;}
+  #lookaway-overlay.active{opacity:1;}
+  .lookaway-msg{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+    background:rgba(245,158,11,.95);color:#000;padding:1rem 2rem;border-radius:10px;
+    font-family:'Orbitron',monospace;font-size:1.2rem;font-weight:700;z-index:999;
+    display:none;text-align:center;}
+  #lookaway-overlay.active+.lookaway-msg{display:block;}
+
+  /* NOISE METER */
+  .noise-bar{height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-top:.3rem;}
+  .noise-fill{height:100%;border-radius:3px;transition:width .2s ease;
+    background:linear-gradient(90deg,var(--accent3),var(--warn),var(--danger));width:0%;}
+
+  /* MOBILE DETECTION FLASH */
+  #mobile-alert-banner{position:fixed;top:0;left:0;right:0;z-index:9998;
+    background:var(--danger);color:#fff;text-align:center;padding:.5rem;
+    font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;letter-spacing:2px;
+    transform:translateY(-100%);transition:.4s;}
+  #mobile-alert-banner.show{transform:translateY(0);}
+
+  /* MULTI-FACE BANNER */
+  #multiface-banner{position:fixed;bottom:0;left:0;right:0;z-index:9998;
+    background:rgba(239,68,68,.9);color:#fff;text-align:center;padding:.5rem;
+    font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;letter-spacing:2px;
+    transform:translateY(100%);transition:.4s;backdrop-filter:blur(4px);}
+  #multiface-banner.show{transform:translateY(0);}
+
+  /* Responsive */
+  @media(max-width:768px){
+    .login-wrap{grid-template-columns:1fr;}
+    .login-hero{display:none;}
+    .rules-grid{grid-template-columns:1fr;}
+    .subject-grid{grid-template-columns:repeat(2,1fr);}
+    .exam-body{grid-template-columns:1fr;}
+    .exam-sidebar{position:fixed;right:1rem;top:70px;width:180px;z-index:50;}
+    .cam-box{width:180px;}
+    .result-hero{grid-template-columns:1fr 1fr;}
+  }
+
+  /* Animate delays for rules */
+  .rule-card:nth-child(1){animation-delay:.1s;}
+  .rule-card:nth-child(2){animation-delay:.2s;}
+  .rule-card:nth-child(3){animation-delay:.3s;}
+  .rule-card:nth-child(4){animation-delay:.4s;}
+  .rule-card:nth-child(5){animation-delay:.5s;}
+  .rule-card:nth-child(6){animation-delay:.6s;}
+  .rule-card:nth-child(7){animation-delay:.7s;}
+  .rule-card:nth-child(8){animation-delay:.8s;}
+
+  /* Scanning line animation on camera */
+  @keyframes scanLine{0%{transform:translateY(-100%);}100%{transform:translateY(400px);}}
+  .scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,229,255,.5),transparent);
+    animation:scanLine 3s linear infinite;pointer-events:none;}
+
+  /* Score ring animation */
+  @keyframes drawCircle{from{stroke-dashoffset:283;}to{stroke-dashoffset:var(--target-offset);}}
+</style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+<div class="particles" id="particles"></div>
+<div id="toast-container"></div>
+<div id="suspicious-flash"></div>
+<div id="lookaway-overlay"></div>
+<div class="lookaway-msg">⚠️ LOOK AT YOUR SCREEN!</div>
+<div id="mobile-alert-banner">📱 MOBILE PHONE DETECTED — SUSPICIOUS ACTIVITY LOGGED</div>
+<div id="multiface-banner">👥 MULTIPLE FACES DETECTED — SUSPICIOUS ACTIVITY LOGGED</div>
+
+<!-- ══════════════════════════════════
+     LOGIN SCREEN
+══════════════════════════════════ -->
+<div id="login-screen" class="screen active">
+  <div class="login-wrap">
+    <div class="login-hero">
+      <div class="icon-big">🛡️</div>
+      <h1 class="hero-title">ProctorAI</h1>
+      <p class="hero-subtitle">Advanced AI-Powered Exam Integrity System with Real-Time Monitoring</p>
+      <div class="feature-pills">
+        <span class="pill">👁️ Face Detection</span>
+        <span class="pill">📱 Mobile Detection</span>
+        <span class="pill">🎤 Noise Analysis</span>
+        <span class="pill">🖥️ Focus Tracking</span>
+        <span class="pill">🔒 Trust Score</span>
+        <span class="pill">📊 AI Reports</span>
+      </div>
+    </div>
+    <div class="card login-card">
+      <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('login')">Student Login</button>
+        <button class="tab-btn" onclick="switchTab('register')">Register</button>
+        <button class="tab-btn" onclick="switchTab('teacher')">Teacher</button>
+      </div>
+
+      <!-- Login -->
+      <div class="tab-pane active" id="tab-login">
+        <div class="input-group">
+          <label>Student ID / Email</label>
+          <input type="text" id="login-id" placeholder="e.g. STU-2024-001" value="STU-2024-001">
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="login-pass" placeholder="••••••••" value="password123">
+        </div>
+        <button class="btn btn-primary w100 mt2" onclick="doLogin()">
+          🔐 Login to ProctorAI
+        </button>
+        <p style="font-size:.8rem;color:var(--text2);text-align:center;margin-top:1rem;">
+          Demo: Any ID + Any Password
+        </p>
+      </div>
+
+      <!-- Register -->
+      <div class="tab-pane" id="tab-register">
+        <div class="input-group">
+          <label>Full Name</label>
+          <input type="text" id="reg-name" placeholder="John Doe">
+        </div>
+        <div class="input-group">
+          <label>Student Email</label>
+          <input type="email" id="reg-email" placeholder="student@university.edu">
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="reg-pass" placeholder="Min 8 characters">
+        </div>
+        <div class="input-group">
+          <label>Student ID</label>
+          <input type="text" id="reg-id" placeholder="STU-2024-XXX">
+        </div>
+        <button class="btn btn-accent w100 mt2" onclick="doRegister()">
+          ✅ Create Account
+        </button>
+      </div>
+
+      <!-- Teacher -->
+      <div class="tab-pane" id="tab-teacher">
+        <div class="input-group">
+          <label>Teacher ID</label>
+          <input type="text" id="teacher-id" placeholder="TCH-001" value="TCH-001">
+        </div>
+        <div class="input-group">
+          <label>Password</label>
+          <input type="password" id="teacher-pass" placeholder="••••••••" value="teacher123">
+        </div>
+        <button class="btn btn-success w100 mt2" onclick="doTeacherLogin()">
+          👨‍🏫 Teacher Portal
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     INSTRUCTIONS SCREEN
+══════════════════════════════════ -->
+<div id="instructions-screen" class="screen">
+  <div class="instructions-wrap" style="position:relative;z-index:1;">
+    <div class="inst-header">
+      <h2 class="page-title">📋 Exam Instructions</h2>
+      <p class="page-sub">Please read all rules carefully before starting your exam</p>
+    </div>
+    <div class="card">
+      <div class="section-title">⚠️ What You MUST NOT Do</div>
+      <div class="rules-grid">
+        <div class="rule-card dont">
+          <span class="rule-icon">📱</span>
+          <div><div class="rule-title" style="color:var(--danger)">No Mobile Phones</div><div class="rule-desc">Placing a phone near your camera will instantly trigger detection and reduce your trust score.</div></div>
+        </div>
+        <div class="rule-card dont">
+          <span class="rule-icon">👥</span>
+          <div><div class="rule-title" style="color:var(--danger)">No Other People</div><div class="rule-desc">Our AI detects multiple faces. Asking someone for help will be immediately flagged.</div></div>
+        </div>
+        <div class="rule-card dont">
+          <span class="rule-icon">🔊</span>
+          <div><div class="rule-title" style="color:var(--danger)">No Loud Noise</div><div class="rule-desc">Talking, receiving answers via audio, or excessive background noise will be detected.</div></div>
+        </div>
+        <div class="rule-card dont">
+          <span class="rule-icon">👀</span>
+          <div><div class="rule-title" style="color:var(--danger)">Don't Look Away</div><div class="rule-desc">Looking away from your screen for more than 10 seconds will be flagged as suspicious.</div></div>
+        </div>
+        <div class="rule-card dont">
+          <span class="rule-icon">🖥️</span>
+          <div><div class="rule-title" style="color:var(--danger)">No Tab Switching</div><div class="rule-desc">Switching tabs or minimizing the browser will immediately log a violation.</div></div>
+        </div>
+        <div class="rule-card dont">
+          <span class="rule-icon">📋</span>
+          <div><div class="rule-title" style="color:var(--danger)">No External Resources</div><div class="rule-desc">Do not use textbooks, notes, or any reference material during the exam.</div></div>
+        </div>
+      </div>
+      <div class="section-title mt3">✅ What You CAN Do</div>
+      <div class="rules-grid">
+        <div class="rule-card ok">
+          <span class="rule-icon">🚿</span>
+          <div><div class="rule-title" style="color:var(--accent3)">Take Short Breaks</div><div class="rule-desc">Raise your hand and request a break — the exam will be paused by the system.</div></div>
+        </div>
+        <div class="rule-card ok">
+          <span class="rule-icon">💬</span>
+          <div><div class="rule-title" style="color:var(--accent3)">Ask Technical Issues</div><div class="rule-desc">If you face connectivity issues, contact your proctor immediately via chat.</div></div>
+        </div>
+      </div>
+
+      <div style="background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.3);border-radius:8px;padding:1rem;margin-top:1.5rem;">
+        <strong style="color:var(--accent2);font-family:'Share Tech Mono',monospace;">⚡ TRUST SCORE SYSTEM:</strong>
+        <p style="font-size:.9rem;color:var(--text2);margin-top:.4rem;line-height:1.6;">
+          You start with a trust score of <strong style="color:var(--accent)">100/100</strong>. Each suspicious activity deducts up to <strong style="color:var(--danger)">-5 points</strong>. 
+          If your score reaches <strong style="color:var(--danger)">0</strong>, your exam will be <strong style="color:var(--danger)">TERMINATED</strong> and reported to your teacher.
+        </p>
+      </div>
+
+      <div class="countdown-bar mt3">
+        <span>🚀</span>
+        <div style="flex:1;">
+          <div style="font-size:.9rem;font-weight:600;">Proceeding to exam setup in</div>
+          <div class="progress-bar mt1"><div class="progress-fill" id="inst-prog" style="width:100%;"></div></div>
+        </div>
+        <div class="count-num" id="inst-countdown">15</div>
+        <button class="btn btn-primary btn-sm" onclick="goToSetup()">Setup Exam →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SETUP SCREEN
+══════════════════════════════════ -->
+<div id="setup-screen" class="screen">
+  <div class="setup-wrap" style="position:relative;z-index:1;">
+    <div class="text-center mb2">
+      <h2 class="page-title">⚙️ Exam Setup</h2>
+      <p class="page-sub">Configure your exam session</p>
+    </div>
+    <div class="card">
+      <div class="section-title">📚 Select Subject</div>
+      <div class="subject-grid" id="subject-grid">
+        <!-- filled by JS -->
+      </div>
+
+      <hr class="divider">
+      <div class="section-title">🎯 Exam Mode</div>
+      <div class="mode-cards">
+        <div class="mode-card selected" id="mode-standard" onclick="selectMode('standard')">
+          <div style="font-size:2rem;">📝</div>
+          <div style="font-weight:700;margin:.4rem 0;">Standard</div>
+          <div style="font-size:.8rem;color:var(--text2);">20 Questions • 45 Minutes<br>Single attempt</div>
+        </div>
+        <div class="mode-card" id="mode-practice" onclick="selectMode('practice')">
+          <div style="font-size:2rem;">🧪</div>
+          <div style="font-weight:700;margin:.4rem 0;">Practice</div>
+          <div style="font-size:.8rem;color:var(--text2);">20 Questions • No timer<br>Answers shown</div>
+        </div>
+      </div>
+
+      <hr class="divider">
+      <div class="section-title">🔗 Paste Exam Link (Optional)</div>
+      <div class="input-group">
+        <label>External Exam URL</label>
+        <input type="url" id="exam-link-input" placeholder="https://your-exam-link.com/exam/...">
+      </div>
+      <p style="font-size:.8rem;color:var(--text2);margin-top:-.5rem;margin-bottom:1rem;">
+        If your teacher provided a link, paste it above. The proctoring system will monitor you while you take it.
+      </p>
+
+      <hr class="divider">
+      <div style="display:flex;align-items:center;gap:1rem;padding:.75rem;background:rgba(0,229,255,.05);border:1px solid var(--border);border-radius:8px;margin-bottom:1.5rem;">
+        <span style="font-size:1.5rem;">📷</span>
+        <div style="flex:1;">
+          <div style="font-weight:600;font-size:.95rem;">Camera Access Required</div>
+          <div style="font-size:.8rem;color:var(--text2);">Your webcam will be used for face detection and monitoring throughout the exam.</div>
+        </div>
+        <span id="cam-status-icon" style="color:var(--warn);">⏳</span>
+      </div>
+      <button class="btn btn-primary w100 btn-lg" id="start-exam-btn" onclick="startExam()">
+        🚀 Begin Exam with Proctoring
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     EXAM SCREEN
+══════════════════════════════════ -->
+<div id="exam-screen" class="screen">
+  <div class="exam-layout">
+    <!-- TOP BAR -->
+    <div class="exam-topbar">
+      <span class="logo">ProctorAI</span>
+      <span class="badge badge-info" id="subj-badge">SUBJECT</span>
+      <span class="badge badge-warn" id="mode-badge">STANDARD</span>
+      <div class="topbar-spacer"></div>
+      <!-- Exam link display -->
+      <div class="exam-link-box">
+        <span class="link-label">🔗 LINK:</span>
+        <input type="text" id="topbar-link" placeholder="No external link" readonly>
+      </div>
+      <!-- Trust -->
+      <div style="display:flex;align-items:center;gap:.5rem;font-size:.85rem;">
+        <span style="color:var(--text2);font-family:'Share Tech Mono',monospace;font-size:.7rem;">TRUST</span>
+        <span id="trust-display" style="font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;color:var(--accent3);">100</span>
+      </div>
+      <!-- Timer -->
+      <div class="timer-display" id="timer-el">45:00</div>
+      <button class="btn btn-danger btn-sm" onclick="confirmSubmit()">Submit Exam</button>
+    </div>
+
+    <!-- BODY -->
+    <div class="exam-body">
+      <!-- LEFT: QUESTIONS -->
+      <div class="question-area">
+        <div class="card qpanel" id="qpanel">
+          <div class="q-header">
+            <div>
+              <div class="q-num" id="q-num-label">Question 1 of 20</div>
+              <div class="q-subject" id="q-subject-label">SUBJECT</div>
+            </div>
+            <span class="badge badge-info" id="q-points">5 pts</span>
+          </div>
+          <div class="progress-bar mb2">
+            <div class="progress-fill" id="q-progress-fill" style="width:5%;"></div>
+          </div>
+          <div class="q-text" id="q-text">Loading question...</div>
+          <div class="options-list" id="options-list"></div>
+          <div id="q-correct-hint" class="correct-label hidden"></div>
+        </div>
+
+        <!-- Nav dots -->
+        <div class="q-nav-dots" id="q-nav-dots"></div>
+
+        <!-- Bottom nav -->
+        <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;">
+          <button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:var(--text);" onclick="prevQ()">← Prev</button>
+          <div style="flex:1;"></div>
+          <button class="btn btn-accent btn-sm" onclick="nextQ()">Next →</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: SIDEBAR -->
+      <div class="exam-sidebar">
+        <!-- Camera -->
+        <div class="cam-box" id="cam-box">
+          <video id="cam-video" autoplay muted playsinline></video>
+          <canvas id="face-canvas"></canvas>
+          <div class="scan-line"></div>
+          <div class="cam-status">
+            <span class="cam-label ok" id="face-label">👤 1 face</span>
+            <span class="cam-label ok" id="noise-label">🔇 quiet</span>
+          </div>
+        </div>
+
+        <!-- Trust panel -->
+        <div class="card trust-panel">
+          <div style="font-size:.7rem;font-family:'Share Tech Mono',monospace;color:var(--accent);letter-spacing:2px;margin-bottom:.75rem;">TRUST SCORE</div>
+          <div class="trust-display">
+            <div class="trust-ring">
+              <svg width="80" height="80" viewBox="0 0 80 80">
+                <circle cx="40" cy="40" r="34" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"/>
+                <circle id="trust-ring-circle" cx="40" cy="40" r="34" fill="none" stroke="var(--accent3)" stroke-width="6"
+                  stroke-dasharray="213" stroke-dashoffset="0" stroke-linecap="round" style="transition:1s ease;"/>
+              </svg>
+              <div class="val"><span id="trust-val">100</span></div>
+            </div>
+            <div>
+              <div style="font-family:'Orbitron',monospace;font-size:1.6rem;font-weight:900;" id="trust-big">100</div>
+              <div class="trust-text">/ 100</div>
+              <div id="trust-status" class="badge badge-success mt1">TRUSTED</div>
+            </div>
+          </div>
+          <!-- Noise meter -->
+          <div style="font-size:.7rem;color:var(--text2);font-family:'Share Tech Mono',monospace;margin-bottom:.2rem;">NOISE LEVEL</div>
+          <div class="noise-bar"><div class="noise-fill" id="noise-fill"></div></div>
+          <!-- Alerts -->
+          <div style="font-size:.7rem;font-family:'Share Tech Mono',monospace;color:var(--accent);letter-spacing:2px;margin-top:1rem;margin-bottom:.5rem;">VIOLATIONS</div>
+          <div class="alerts-list" id="alerts-list">
+            <div style="font-size:.75rem;color:var(--text2);font-style:italic;">No violations detected</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="exam-bottombar">
+      <span style="font-size:.8rem;color:var(--text2);font-family:'Share Tech Mono',monospace;">
+        🔒 PROCTORED SESSION • ALL ACTIVITY LOGGED
+      </span>
+      <div style="flex:1;"></div>
+      <span style="font-size:.8rem;color:var(--text2);" id="answered-count">0/20 answered</span>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     TERMINATED SCREEN
+══════════════════════════════════ -->
+<div id="terminated-screen" class="screen">
+  <div class="term-glow"></div>
+  <div class="term-wrap" style="position:relative;z-index:1;">
+    <div class="siren">
+      <div class="siren-light red"></div>
+      <div class="siren-light blue"></div>
+      <div class="siren-light red"></div>
+    </div>
+    <div class="term-icon">⛔</div>
+    <div class="term-title">EXAM TERMINATED</div>
+    <div style="font-family:'Share Tech Mono',monospace;font-size:1rem;color:var(--danger);margin:1rem 0;letter-spacing:2px;">
+      TRUST SCORE REACHED ZERO
+    </div>
+    <div class="card mt3" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3);">
+      <p style="color:var(--text2);line-height:1.7;">
+        Your exam session has been <strong style="color:var(--danger)">permanently terminated</strong> due to repeated suspicious activity. 
+        Your complete violation report has been automatically sent to your instructor.
+      </p>
+      <div style="display:flex;gap:1rem;margin-top:1.5rem;flex-wrap:wrap;justify-content:center;">
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.08);color:var(--text);" onclick="showResultOnly()">📊 View Report</button>
+        <button class="btn btn-danger btn-sm" onclick="goToLogin()">🔄 Back to Login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     RESULT SCREEN
+══════════════════════════════════ -->
+<div id="result-screen" class="screen">
+  <div class="result-wrap" style="position:relative;z-index:1;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <h2 class="page-title">📊 Exam Results</h2>
+        <p class="page-sub" id="result-subtitle">Exam complete — here is your full report</p>
+      </div>
+      <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+        <button class="btn btn-sm" style="background:rgba(255,255,255,.08);" onclick="printReport()">🖨️ Print Report</button>
+        <button class="btn btn-sm btn-danger" onclick="goToLogin()">🔄 New Exam</button>
+      </div>
+    </div>
+
+    <!-- Score cards -->
+    <div class="result-hero">
+      <div class="card stat-box">
+        <div class="stat-val green" id="res-score">0%</div>
+        <div class="stat-label">Score</div>
+      </div>
+      <div class="card stat-box">
+        <div class="stat-val blue" id="res-correct">0/20</div>
+        <div class="stat-label">Correct</div>
+      </div>
+      <div class="card stat-box">
+        <div class="stat-val" id="res-trust-final">100</div>
+        <div class="stat-label">Final Trust</div>
+      </div>
+    </div>
+
+    <!-- Cheating Report Table -->
+    <div class="card mb2">
+      <div class="section-title">🚨 Suspicious Activity Report</div>
+      <p style="font-size:.85rem;color:var(--text2);margin-bottom:1rem;">Auto-generated report for teacher review</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>Activity Type</th>
+              <th>Question</th>
+              <th>Trust Deducted</th>
+              <th>Severity</th>
+            </tr>
+          </thead>
+          <tbody id="cheat-table-body">
+            <tr><td colspan="6" style="text-align:center;color:var(--accent3);padding:2rem;">✅ No suspicious activity detected</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div style="display:flex;gap:1rem;margin-top:1rem;flex-wrap:wrap;">
+        <div class="badge badge-danger" id="total-violations-badge">0 violations</div>
+        <div class="badge badge-warn" id="total-deducted-badge">-0 trust deducted</div>
+        <div id="reexam-badge" class="badge badge-info hidden">🔄 RE-EXAM FLAGGED</div>
+      </div>
+    </div>
+
+    <!-- Q Review -->
+    <div class="card">
+      <div class="section-title">📝 Question Review</div>
+      <div id="q-review-list"></div>
+    </div>
+
+    <!-- Re-exam -->
+    <div class="card mt2" id="reexam-panel" style="background:rgba(245,158,11,.05);border-color:rgba(245,158,11,.2);">
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <span style="font-size:2rem;">🔄</span>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:1rem;color:var(--warn);">Re-Examination Available</div>
+          <div style="font-size:.85rem;color:var(--text2);margin-top:.2rem;">Due to suspicious activity detected during your exam, your teacher may require you to sit a supervised re-examination.</div>
+        </div>
+        <button class="btn btn-sm" style="background:rgba(245,158,11,.15);color:var(--warn);border:1px solid rgba(245,158,11,.3);" onclick="requestReExam()">Request Re-Exam</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     TEACHER SCREEN
+══════════════════════════════════ -->
+<div id="teacher-screen" class="screen">
+  <div style="padding:2rem;max-width:1100px;margin:0 auto;width:100%;position:relative;z-index:1;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:2rem;flex-wrap:wrap;gap:1rem;">
+      <div>
+        <h2 class="page-title">👨‍🏫 Teacher Dashboard</h2>
+        <p class="page-sub">Monitor student exams and review violation reports</p>
+      </div>
+      <button class="btn btn-sm" style="background:rgba(255,255,255,.08);" onclick="goToLogin()">← Logout</button>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+      <div class="card stat-box"><div class="stat-val blue">24</div><div class="stat-label">Students</div></div>
+      <div class="card stat-box"><div class="stat-val green">18</div><div class="stat-label">Completed</div></div>
+      <div class="card stat-box"><div class="stat-val warn" style="color:var(--warn);">4</div><div class="stat-label">Flagged</div></div>
+      <div class="card stat-box"><div class="stat-val red">2</div><div class="stat-label">Terminated</div></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">📊 Student Reports</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Student</th><th>Subject</th><th>Score</th><th>Trust</th><th>Violations</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Ali Hassan (STU-001)</td><td>Python</td><td class="success">85%</td><td>100</td><td>0</td><td><span class="badge badge-success">Clean</span></td><td><button class="btn btn-sm btn-accent" style="padding:.25rem .6rem;">View</button></td></tr>
+            <tr><td>Sara Ahmed (STU-002)</td><td>AI</td><td class="warn">72%</td><td>75</td><td>5</td><td><span class="badge badge-warn">Flagged</span></td><td><button class="btn btn-sm btn-accent" style="padding:.25rem .6rem;">View</button></td></tr>
+            <tr><td>Omar Khan (STU-003)</td><td>Java</td><td class="red">--</td><td>0</td><td>12</td><td><span class="badge badge-danger">Terminated</span></td><td><button class="btn btn-sm btn-accent" style="padding:.25rem .6rem;">View</button></td></tr>
+            <tr><td>Fatima Malik (STU-004)</td><td>Physics</td><td class="success">91%</td><td>95</td><td>1</td><td><span class="badge badge-success">Clean</span></td><td><button class="btn btn-sm btn-accent" style="padding:.25rem .6rem;">View</button></td></tr>
+            <tr><td>Zainab Ali (STU-005)</td><td>Database</td><td class="warn">68%</td><td>60</td><td>8</td><td><span class="badge badge-warn">Flagged</span></td><td><button class="btn btn-sm btn-accent" style="padding:.25rem .6rem;">View</button></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════
+//  DATA — QUESTION BANK (20 per subject)
+// ════════════════════════════════════════════════
+const SUBJECTS = {
+  calculus:{ label:"Calculus", icon:"∫" },
+  physics:{ label:"Physics", icon:"⚛️" },
+  ai:{ label:"Artificial Intelligence", icon:"🤖" },
+  database:{ label:"Database", icon:"🗄️" },
+  python:{ label:"Python", icon:"🐍" },
+  c:{ label:"C Programming", icon:"©" },
+  java:{ label:"Java", icon:"☕" }
+};
+
+const QUESTIONS = {
+  calculus:[
+    {q:"What is the derivative of sin(x)?",opts:["cos(x)","-cos(x)","tan(x)","-sin(x)"],a:0},
+    {q:"∫ x dx = ?",opts:["x²","x²/2 + C","2x","x/2"],a:1},
+    {q:"What is the limit of (sin x)/x as x→0?",opts:["0","∞","1","Undefined"],a:2},
+    {q:"What is the derivative of e^x?",opts:["xe^(x-1)","e^x","ln(x)","1/x"],a:1},
+    {q:"The derivative of ln(x) is?",opts:["1/x","x","ln(x+1)","e^x"],a:0},
+    {q:"∫ e^x dx = ?",opts:["xe^x","e^x + C","e^(x+1)","ln(x)"],a:1},
+    {q:"What is d/dx [x^n]?",opts:["x^(n-1)","nx^(n-1)","nx^n","(n-1)x^n"],a:1},
+    {q:"The second derivative of position gives?",opts:["Velocity","Acceleration","Jerk","Displacement"],a:1},
+    {q:"∫ cos(x) dx = ?",opts:["sin(x)+C","-sin(x)+C","tan(x)+C","cos(x)+C"],a:0},
+    {q:"What is a critical point?",opts:["f(x)=0","f'(x)=0 or undefined","f''(x)=0","x=0"],a:1},
+    {q:"Chain rule: d/dx[f(g(x))] = ?",opts:["f'(x)g'(x)","f'(g(x))·g'(x)","f(g'(x))","f'(x)+g'(x)"],a:1},
+    {q:"∫ 1/x dx = ?",opts:["x^(-2)","ln|x|+C","-1/x²","e^x"],a:1},
+    {q:"The Fundamental Theorem of Calculus connects?",opts:["Limits & Derivatives","Derivatives & Integrals","Algebra & Geometry","Series & Sequences"],a:1},
+    {q:"What is d/dx [tan(x)]?",opts:["sec(x)","sin(x)/cos(x)","sec²(x)","csc²(x)"],a:2},
+    {q:"A function is concave up when?",opts:["f'(x)>0","f'(x)<0","f''(x)>0","f''(x)<0"],a:2},
+    {q:"L'Hôpital's Rule is used for?",opts:["Integration","0/0 or ∞/∞ limits","Series","Differential equations"],a:1},
+    {q:"∫ sec²(x) dx = ?",opts:["tan(x)+C","sec(x)+C","2sec(x)tan(x)","csc(x)"],a:0},
+    {q:"What is the Taylor series for e^x?",opts:["Σ xⁿ","Σ xⁿ/n!","Σ (-1)ⁿxⁿ","Σ xⁿ/n"],a:1},
+    {q:"Product rule: d/dx[uv] = ?",opts:["u'v'","uv'+vu'","u/v'+v/u'","u'v+v'u"],a:3},
+    {q:"The area under a curve is found by?",opts:["Differentiation","Definite integration","L'Hôpital's Rule","Taylor expansion"],a:1}
+  ],
+  physics:[
+    {q:"Newton's second law states F = ?",opts:["ma","mv","m/a","m²a"],a:0},
+    {q:"The unit of energy in SI is?",opts:["Newton","Watt","Joule","Pascal"],a:2},
+    {q:"Speed of light in vacuum ≈ ?",opts:["3×10⁶ m/s","3×10⁸ m/s","3×10¹⁰ m/s","3×10⁴ m/s"],a:1},
+    {q:"Ohm's law: V = ?",opts:["I/R","IR","I²R","R/I"],a:1},
+    {q:"The SI unit of charge is?",opts:["Ampere","Volt","Coulomb","Farad"],a:2},
+    {q:"Kinetic energy formula is?",opts:["mgh","½mv²","mv","Fd"],a:1},
+    {q:"What is the first law of thermodynamics?",opts:["Energy is conserved","Entropy increases","Heat flows cold→hot","F=ma"],a:0},
+    {q:"Wavelength × frequency = ?",opts:["Amplitude","Wave speed","Period","Intensity"],a:1},
+    {q:"What type of wave is sound?",opts:["Transverse","Electromagnetic","Longitudinal","Mechanical-transverse"],a:2},
+    {q:"The photoelectric effect was explained by?",opts:["Newton","Maxwell","Einstein","Bohr"],a:2},
+    {q:"Gravitational force formula is?",opts:["Gm₁m₂/r","Gm₁m₂/r²","Gm/r²","m₁m₂/r"],a:1},
+    {q:"Which particle has no charge?",opts:["Proton","Electron","Neutron","Positron"],a:2},
+    {q:"The unit of frequency is?",opts:["Meter","Second","Hertz","Radian"],a:2},
+    {q:"Magnetic field unit is?",opts:["Newton","Coulomb","Tesla","Weber"],a:2},
+    {q:"Snell's law relates to?",opts:["Reflection","Refraction","Diffraction","Interference"],a:1},
+    {q:"Potential energy at height h is?",opts:["mgh","½mv²","mv","m/gh"],a:0},
+    {q:"Which law states current is constant in series?",opts:["Faraday","Kirchhoff's Current","Ohm","Lenz"],a:1},
+    {q:"The Doppler effect involves?",opts:["Light bending","Frequency change with motion","Wave interference","Particle duality"],a:1},
+    {q:"Resistors in series: total R = ?",opts:["R₁×R₂","R₁+R₂","1/(1/R₁+1/R₂)","R₁-R₂"],a:1},
+    {q:"Half-life in radioactive decay is?",opts:["Time to fully decay","Time for half the atoms to decay","Maximum energy","Initial activity"],a:1}
+  ],
+  ai:[
+    {q:"What does AI stand for?",opts:["Automated Input","Artificial Intelligence","Automated Intelligence","Applied Inference"],a:1},
+    {q:"Which algorithm builds decision trees?",opts:["KNN","ID3/C4.5","SVM","K-Means"],a:1},
+    {q:"Supervised learning requires?",opts:["Labeled data","Unlabeled data","Reward signals","Random data"],a:0},
+    {q:"What is overfitting?",opts:["Model too simple","Model too complex, memorizes training data","Low bias","High precision"],a:1},
+    {q:"K-Means is a type of?",opts:["Supervised learning","Reinforcement learning","Unsupervised clustering","Semi-supervised"],a:2},
+    {q:"A perceptron is the simplest?",opts:["Decision tree","Neural network","Clustering algorithm","Search algorithm"],a:1},
+    {q:"What does CNN stand for?",opts:["Central Neural Network","Convolutional Neural Network","Clustered Node Network","Circular Node Net"],a:1},
+    {q:"In reinforcement learning, the agent learns from?",opts:["Labels","Rewards/penalties","Raw data","Clustering"],a:1},
+    {q:"What is the activation function of output in binary classification?",opts:["ReLU","Tanh","Sigmoid","Linear"],a:2},
+    {q:"What is the Turing Test?",opts:["Speed benchmark","If a machine can mimic human responses","AI training method","Data compression"],a:1},
+    {q:"Backpropagation is used for?",opts:["Feature selection","Training neural networks","Data preprocessing","Clustering"],a:1},
+    {q:"NLP stands for?",opts:["Neural Logic Programming","Natural Language Processing","Numeric Learning Process","Node Link Protocol"],a:1},
+    {q:"Which is NOT a type of machine learning?",opts:["Supervised","Unsupervised","Reinforcement","Compilation Learning"],a:3},
+    {q:"The vanishing gradient problem affects?",opts:["Decision trees","Deep neural networks","SVM","K-Means"],a:1},
+    {q:"What is a hyperparameter?",opts:["Parameter learned from data","Configuration set before training","Training output","Test result"],a:1},
+    {q:"Random Forest uses?",opts:["Single decision tree","Multiple decision trees","Neural networks","K-Means clusters"],a:1},
+    {q:"Cross-entropy loss is used for?",opts:["Regression","Classification","Clustering","Dimensionality reduction"],a:1},
+    {q:"What does GAN stand for?",opts:["General Adversarial Node","Generative Adversarial Network","Graph Alignment Net","Gradient Ascent Node"],a:1},
+    {q:"Transfer learning refers to?",opts:["Reusing a pre-trained model","Moving data","Training from scratch","Copying weights randomly"],a:0},
+    {q:"The 'attention mechanism' is central to?",opts:["CNN","RNN","Transformer","K-Means"],a:2}
+  ],
+  database:[
+    {q:"What does SQL stand for?",opts:["Simple Query Language","Structured Query Language","Standard Query Logic","Sequential Query Language"],a:1},
+    {q:"Which SQL command retrieves data?",opts:["INSERT","UPDATE","SELECT","DELETE"],a:2},
+    {q:"A primary key must be?",opts:["Null","Unique and not null","Duplicate","Foreign"],a:1},
+    {q:"What is normalization?",opts:["Speeding up queries","Reducing redundancy","Adding indexes","Encrypting data"],a:1},
+    {q:"A foreign key references?",opts:["Same table","Primary key of another table","Any column","Index column"],a:1},
+    {q:"Which is a NoSQL database?",opts:["MySQL","PostgreSQL","MongoDB","Oracle"],a:2},
+    {q:"ACID stands for?",opts:["Atomic Consistent Isolated Durable","Asynchronous Concurrent Isolated Data","Automated Concurrent Isolated Database","Atomic Concurrent Indexed Durable"],a:0},
+    {q:"An index is used to?",opts:["Delete records","Speed up queries","Store backups","Normalize tables"],a:1},
+    {q:"The JOIN operation combines?",opts:["Two tables","Two databases","Two indexes","Two queries"],a:0},
+    {q:"Which normal form removes partial dependencies?",opts:["1NF","2NF","3NF","BCNF"],a:1},
+    {q:"DDL stands for?",opts:["Data Definition Language","Data Description Logic","Database Design Layer","Distributed Data Language"],a:0},
+    {q:"Which command removes a table?",opts:["DELETE","DROP","TRUNCATE","REMOVE"],a:1},
+    {q:"A VIEW in SQL is?",opts:["A physical table","A virtual table","An index","A stored procedure"],a:1},
+    {q:"What is a transaction?",opts:["A single SQL statement","A unit of work that is atomic","A table join","An index scan"],a:1},
+    {q:"Entity-Relationship diagram shows?",opts:["Code flow","Data relationships","Network topology","Algorithm steps"],a:1},
+    {q:"Which SQL function counts rows?",opts:["SUM()","AVG()","COUNT()","MAX()"],a:2},
+    {q:"Relational databases store data in?",opts:["Documents","Tables","Graphs","Key-value pairs"],a:1},
+    {q:"GROUP BY clause is used with?",opts:["WHERE","HAVING","Aggregate functions","JOIN"],a:2},
+    {q:"What is deadlock in databases?",opts:["Slow query","Two transactions blocking each other","Corrupted data","Missing index"],a:1},
+    {q:"Stored procedure is?",opts:["A table","A precompiled SQL code block","A view","An index"],a:1}
+  ],
+  python:[
+    {q:"Which keyword defines a function in Python?",opts:["function","define","def","fun"],a:2},
+    {q:"What is the output of: print(type([]))?",opts:["<class 'tuple'>","<class 'list'>","<class 'dict'>","<class 'set'>"],a:1},
+    {q:"Python uses indentation for?",opts:["Style","Code blocks","Comments","Variables"],a:1},
+    {q:"Which is NOT a Python data type?",opts:["int","float","char","str"],a:2},
+    {q:"len('hello') = ?",opts:["4","5","6","Error"],a:1},
+    {q:"List comprehension [x**2 for x in range(3)] = ?",opts:["[1,4,9]","[0,1,4]","[0,1,2]","[1,2,3]"],a:1},
+    {q:"Which library is used for data analysis?",opts:["NumPy","Pandas","Both","Django"],a:2},
+    {q:"What does 'self' represent in a class?",opts:["The class itself","The instance","A static method","The parent class"],a:1},
+    {q:"try/except is used for?",opts:["Looping","Exception handling","Defining functions","Importing"],a:1},
+    {q:"What does pip do?",opts:["Run Python scripts","Manage packages","Compile code","Debug"],a:1},
+    {q:"Which symbol starts a comment in Python?",opts:["//","/*","#","--"],a:2},
+    {q:"A tuple is?",opts:["Mutable ordered","Immutable ordered","Mutable unordered","Immutable unordered"],a:1},
+    {q:"lambda x: x*2 is a?",opts:["Class","Generator","Anonymous function","Decorator"],a:2},
+    {q:"What is a decorator in Python?",opts:["A variable","A function that modifies another function","A loop","A comment"],a:1},
+    {q:"range(0,5) produces?",opts:["0,1,2,3,4,5","0,1,2,3,4","1,2,3,4,5","1,2,3,4"],a:1},
+    {q:"'abc'[::-1] = ?",opts:["abc","cba","bca","Error"],a:1},
+    {q:"What is a generator?",opts:["Yields values lazily","A list","A tuple","A dictionary"],a:0},
+    {q:"os.path.join() is used for?",opts:["String joining","File path manipulation","Sorting","Math"],a:1},
+    {q:"__init__ in a class is called?",opts:["Destructor","Constructor","Method","Attribute"],a:1},
+    {q:"What does JSON stand for?",opts:["Java Serialized Object Notation","JavaScript Object Notation","JSON Sequential Object","Just Standard Object Notation"],a:1}
+  ],
+  c:[
+    {q:"Which header file includes printf?",opts:["stdlib.h","string.h","stdio.h","math.h"],a:2},
+    {q:"int main() returns?",opts:["void","char","int","float"],a:2},
+    {q:"Pointer declaration: int *p means?",opts:["p is an int","p points to int","p is int array","p is int reference"],a:1},
+    {q:"sizeof(int) typically returns?",opts:["2","4","8","1"],a:1},
+    {q:"Which operator accesses struct via pointer?",opts:[".","->","*","&"],a:1},
+    {q:"malloc() allocates memory in?",opts:["Stack","Heap","Register","ROM"],a:1},
+    {q:"C is which type of language?",opts:["OOP","Procedural","Functional","Declarative"],a:1},
+    {q:"String termination character is?",opts:["\\n","\\t","\\0","\\r"],a:2},
+    {q:"What is a segmentation fault?",opts:["Syntax error","Illegal memory access","Stack overflow","File error"],a:1},
+    {q:"Which loop runs at least once?",opts:["for","while","do-while","foreach"],a:2},
+    {q:"#define is used for?",opts:["Variables","Constants/macros","Functions","Headers"],a:1},
+    {q:"What does static keyword do in a function?",opts:["Constant value","Retains value between calls","External linkage","Dynamic allocation"],a:1},
+    {q:"Bitwise AND operator is?",opts:["|","&","^","~"],a:1},
+    {q:"What is recursion?",opts:["Loop","A function calling itself","Pointer arithmetic","Memory allocation"],a:1},
+    {q:"Array index starts at?",opts:["1","0","-1","Depends"],a:1},
+    {q:"scanf reads input and stores at?",opts:["Variable","Address of variable","Pointer","File"],a:1},
+    {q:"File open mode 'w' means?",opts:["Read","Write","Append","Execute"],a:1},
+    {q:"Which is a valid C identifier?",opts:["2var","_myVar","my-var","int"],a:1},
+    {q:"What is a struct?",opts:["A function","User-defined data type","Pointer type","Array type"],a:1},
+    {q:"The exit() function is from?",opts:["stdio.h","string.h","stdlib.h","math.h"],a:2}
+  ],
+  java:[
+    {q:"Java is compiled to?",opts:["Machine code","Bytecode","Assembly","HTML"],a:1},
+    {q:"Which keyword creates an object?",opts:["create","object","new","make"],a:2},
+    {q:"OOP stands for?",opts:["Object Oriented Programming","Open Object Process","Ordered Object Protocol","Optimal Object Programming"],a:0},
+    {q:"String is __ in Java",opts:["Primitive","Mutable","Immutable","Array"],a:2},
+    {q:"Which method is the entry point?",opts:["start()","init()","main()","run()"],a:2},
+    {q:"Interface in Java can have?",opts:["Only abstract methods","Constructors","Instance variables","Static fields only"],a:0},
+    {q:"try-catch-finally: finally runs?",opts:["Only if no exception","Only if exception","Always","Never"],a:2},
+    {q:"super keyword refers to?",opts:["Current class","Parent class","Interface","Static method"],a:1},
+    {q:"ArrayList is in which package?",opts:["java.io","java.lang","java.util","java.net"],a:2},
+    {q:"JVM stands for?",opts:["Java Variable Method","Java Virtual Machine","Java Void Module","Joint Virtual Memory"],a:1},
+    {q:"Which access modifier is most restrictive?",opts:["public","protected","default","private"],a:3},
+    {q:"Inheritance uses which keyword?",opts:["inherits","implements","extends","super"],a:2},
+    {q:"Polymorphism allows?",opts:["Multiple inheritance","One method, many forms","Static typing","Memory management"],a:1},
+    {q:"What is a constructor?",opts:["A method with return type","A method called at object creation","A static block","An interface method"],a:1},
+    {q:"Which is NOT a primitive type?",opts:["int","boolean","String","char"],a:2},
+    {q:"Thread.sleep() throws?",opts:["IOException","InterruptedException","RuntimeException","NullPointerException"],a:1},
+    {q:"HashMap stores data as?",opts:["Ordered list","Key-value pairs","Stack","Queue"],a:1},
+    {q:"Abstract class can have?",opts:["Only abstract methods","Both abstract and concrete methods","No methods","Only static methods"],a:1},
+    {q:"What does GC stand for in Java?",opts:["General Compiler","Garbage Collection","Global Class","Generic Container"],a:1},
+    {q:"@Override annotation means?",opts:["Create new method","Override parent method","Static method","Abstract method"],a:1}
+  ]
+};
+
+// ════════════════════════════════════════════════
+//  STATE
+// ════════════════════════════════════════════════
+let state = {
+  student: null,
+  subject: null,
+  mode: 'standard',
+  examLink: '',
+  questions: [],
+  answers: {},
+  currentQ: 0,
+  trustScore: 100,
+  violations: [],
+  timerInterval: null,
+  timeLeft: 45*60,
+  lookAwayTimer: null,
+  lookAwaySeconds: 0,
+  noiseInterval: null,
+  faceSimInterval: null,
+  noiseLevel: 0,
+  faceCount: 1,
+  mediaStream: null,
+  examStarted: false,
+  examEnded: false
+};
+
+// ════════════════════════════════════════════════
+//  PARTICLES
+// ════════════════════════════════════════════════
+(function initParticles(){
+  const c = document.getElementById('particles');
+  for(let i=0;i<40;i++){
+    const p=document.createElement('div'); p.className='particle';
+    p.style.cssText=`left:${Math.random()*100}%;--dur:${6+Math.random()*10}s;--delay:${Math.random()*8}s;--dx:${(Math.random()-.5)*100}px;`;
+    c.appendChild(p);
+  }
+})();
+
+// ════════════════════════════════════════════════
+//  NAVIGATION
+// ════════════════════════════════════════════════
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function goToLogin(){ stopAllMonitoring(); showScreen('login-screen'); }
+function showResultOnly(){ showScreen('result-screen'); }
+
+// ════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{
+    const names=['login','register','teacher'];
+    b.classList.toggle('active', names[i]===t);
+  });
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+t).classList.add('active');
+}
+
+function doLogin(){
+  const id = document.getElementById('login-id').value.trim();
+  const pw = document.getElementById('login-pass').value.trim();
+  if(!id||!pw){ toast('Please fill all fields','warn'); return; }
+  state.student = { id, name: id };
+  toast('Welcome back, '+id+'!','success');
+  showInstructions();
+}
+function doRegister(){
+  const name=document.getElementById('reg-name').value.trim();
+  const email=document.getElementById('reg-email').value.trim();
+  if(!name||!email){ toast('Please fill all fields','warn'); return; }
+  state.student = {id: document.getElementById('reg-id').value||'STU-NEW', name};
+  toast('Account created! Welcome, '+name,'success');
+  showInstructions();
+}
+function doTeacherLogin(){
+  const id=document.getElementById('teacher-id').value.trim();
+  if(!id){ toast('Enter teacher credentials','warn'); return; }
+  toast('Welcome, Teacher '+id,'success');
+  showScreen('teacher-screen');
+}
+
+// ════════════════════════════════════════════════
+//  INSTRUCTIONS
+// ════════════════════════════════════════════════
+let instTimer=null;
+function showInstructions(){
+  showScreen('instructions-screen');
+  let t=15;
+  document.getElementById('inst-countdown').textContent=t;
+  document.getElementById('inst-prog').style.width='100%';
+  if(instTimer) clearInterval(instTimer);
+  instTimer=setInterval(()=>{
+    t--;
+    document.getElementById('inst-countdown').textContent=t;
+    document.getElementById('inst-prog').style.width=(t/15*100)+'%';
+    if(t<=0){ clearInterval(instTimer); goToSetup(); }
+  },1000);
+}
+function goToSetup(){
+  if(instTimer){ clearInterval(instTimer); instTimer=null; }
+  buildSetupPage();
+  showScreen('setup-screen');
+}
+
+// ════════════════════════════════════════════════
+//  SETUP
+// ════════════════════════════════════════════════
+function buildSetupPage(){
+  const grid=document.getElementById('subject-grid');
+  grid.innerHTML='';
+  Object.entries(SUBJECTS).forEach(([key,{label,icon}])=>{
+    const d=document.createElement('div');
+    d.className='subj-card'; d.dataset.key=key;
+    d.innerHTML=`<div class="subj-icon">${icon}</div><div>${label}</div>`;
+    d.onclick=()=>{ grid.querySelectorAll('.subj-card').forEach(c=>c.classList.remove('selected')); d.classList.add('selected'); state.subject=key; };
+    grid.appendChild(d);
+  });
+  // Select first by default
+  grid.firstChild.click();
+  requestCameraAccess();
+}
+function selectMode(m){
+  state.mode=m;
+  document.getElementById('mode-standard').classList.toggle('selected',m==='standard');
+  document.getElementById('mode-practice').classList.toggle('selected',m==='practice');
+}
+async function requestCameraAccess(){
+  const icon=document.getElementById('cam-status-icon');
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+    state.mediaStream=stream;
+    icon.textContent='✅';
+    toast('Camera & microphone ready','success');
+  } catch(e){
+    icon.textContent='⚠️';
+    toast('Camera not available — simulation mode active','warn');
+  }
+}
+function startExam(){
+  if(!state.subject){ toast('Please select a subject','warn'); return; }
+  const link = document.getElementById('exam-link-input').value.trim();
+  state.examLink = link;
+  buildExam();
+  showScreen('exam-screen');
+  setupExamUI();
+  startTimer();
+  startProctoring();
+  if(link){ document.getElementById('topbar-link').value=link; }
+}
+
+// ════════════════════════════════════════════════
+//  EXAM BUILD
+// ════════════════════════════════════════════════
+function buildExam(){
+  state.questions = [...QUESTIONS[state.subject]];
+  state.answers = {};
+  state.currentQ = 0;
+  state.trustScore = 100;
+  state.violations = [];
+  state.examEnded = false;
+  state.lookAwaySeconds = 0;
+  document.getElementById('subj-badge').textContent = SUBJECTS[state.subject].label.toUpperCase();
+  document.getElementById('mode-badge').textContent = state.mode.toUpperCase();
+  buildNavDots();
+  renderQuestion();
+}
+function buildNavDots(){
+  const c=document.getElementById('q-nav-dots'); c.innerHTML='';
+  state.questions.forEach((_,i)=>{
+    const d=document.createElement('div'); d.className='q-dot'; d.id='dot-'+i;
+    d.textContent=i+1;
+    d.onclick=()=>jumpToQ(i);
+    c.appendChild(d);
+  });
+}
+function updateDots(){
+  state.questions.forEach((_,i)=>{
+    const d=document.getElementById('dot-'+i);
+    d.className='q-dot';
+    if(i===state.currentQ) d.classList.add('current');
+    if(state.answers[i]!==undefined) d.classList.add('answered');
+  });
+}
+function renderQuestion(){
+  const q=state.questions[state.currentQ];
+  const total=state.questions.length;
+  document.getElementById('q-num-label').textContent=`Question ${state.currentQ+1} of ${total}`;
+  document.getElementById('q-subject-label').textContent=SUBJECTS[state.subject].label.toUpperCase();
+  document.getElementById('q-progress-fill').style.width=((state.currentQ+1)/total*100)+'%';
+  document.getElementById('q-text').textContent=q.q;
+  document.getElementById('q-correct-hint').classList.add('hidden');
+  const ol=document.getElementById('options-list'); ol.innerHTML='';
+  const keys=['A','B','C','D'];
+  q.opts.forEach((opt,i)=>{
+    const d=document.createElement('div');
+    d.className='option'; d.dataset.i=i;
+    const selected=state.answers[state.currentQ]===i;
+    const examDone=state.examEnded||state.mode==='practice';
+    if(selected) d.classList.add('selected');
+    if(examDone){
+      if(i===q.a) d.classList.add('correct');
+      else if(selected&&i!==q.a) d.classList.add('wrong');
+    }
+    d.innerHTML=`<span class="opt-key">${keys[i]}</span><span>${opt}</span>`;
+    if(!state.examEnded) d.onclick=()=>selectAnswer(i);
+    ol.appendChild(d);
+  });
+  if(state.examEnded||state.mode==='practice'){
+    const h=document.getElementById('q-correct-hint');
+    h.classList.remove('hidden');
+    h.textContent='✅ Correct Answer: '+keys[q.a]+') '+q.opts[q.a];
+  }
+  updateDots();
+  updateAnsweredCount();
+  // Re-animate
+  const panel=document.getElementById('qpanel');
+  panel.style.animation='none'; panel.offsetHeight; panel.style.animation='qSlide .4s ease';
+}
+function selectAnswer(i){
+  if(state.examEnded) return;
+  state.answers[state.currentQ]=i;
+  renderQuestion();
+}
+function nextQ(){ if(state.currentQ<state.questions.length-1){ state.currentQ++; renderQuestion(); } else { toast('Last question reached. Click Submit when ready.','info'); } }
+function prevQ(){ if(state.currentQ>0){ state.currentQ--; renderQuestion(); } }
+function jumpToQ(i){ state.currentQ=i; renderQuestion(); }
+function updateAnsweredCount(){
+  const c=Object.keys(state.answers).length;
+  document.getElementById('answered-count').textContent=`${c}/${state.questions.length} answered`;
+}
+
+// ════════════════════════════════════════════════
+//  TIMER
+// ════════════════════════════════════════════════
+function setupExamUI(){
+  state.timeLeft=state.mode==='practice'?99*60:45*60;
+  updateTimerDisplay();
+  updateTrustUI();
+}
+function startTimer(){
+  if(state.timerInterval) clearInterval(state.timerInterval);
+  if(state.mode==='practice') return;
+  state.timerInterval=setInterval(()=>{
+    if(state.examEnded){ clearInterval(state.timerInterval); return; }
+    state.timeLeft--;
+    updateTimerDisplay();
+    if(state.timeLeft<=0) finishExam('timeout');
+  },1000);
+}
+function updateTimerDisplay(){
+  const m=Math.floor(state.timeLeft/60),s=state.timeLeft%60;
+  const el=document.getElementById('timer-el');
+  el.textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  el.className='timer-display';
+  if(state.timeLeft<300&&state.timeLeft>60) el.classList.add('warn');
+  else if(state.timeLeft<=60) el.classList.add('danger');
+}
+
+// ════════════════════════════════════════════════
+//  TRUST SCORE
+// ════════════════════════════════════════════════
+function deductTrust(amount,reason){
+  if(state.examEnded) return;
+  state.trustScore=Math.max(0,state.trustScore-amount);
+  const now=new Date().toLocaleTimeString();
+  state.violations.push({time:now,type:reason,q:state.currentQ+1,deducted:amount});
+  updateTrustUI();
+  addAlert(reason,now);
+  flashSuspicious();
+  if(state.trustScore<=0){ setTimeout(()=>terminateExam(),1000); }
+}
+function updateTrustUI(){
+  const t=state.trustScore;
+  document.getElementById('trust-val').textContent=t;
+  document.getElementById('trust-big').textContent=t;
+  document.getElementById('trust-display').textContent=t;
+  // Ring
+  const circ=document.getElementById('trust-ring-circle');
+  const offset=213*(1-t/100);
+  circ.style.strokeDashoffset=offset;
+  let col=t>60?'var(--accent3)':t>30?'var(--warn)':'var(--danger)';
+  circ.style.stroke=col;
+  document.getElementById('trust-big').style.color=col;
+  document.getElementById('trust-display').style.color=col;
+  // Status badge
+  const sb=document.getElementById('trust-status');
+  if(t>60){ sb.className='badge badge-success mt1'; sb.textContent='TRUSTED'; }
+  else if(t>30){ sb.className='badge badge-warn mt1'; sb.textContent='SUSPICIOUS'; }
+  else{ sb.className='badge badge-danger mt1'; sb.textContent='HIGH RISK'; }
+}
+function addAlert(msg,time){
+  const list=document.getElementById('alerts-list');
+  if(list.querySelector('div[style*="italic"]')) list.innerHTML='';
+  const item=document.createElement('div'); item.className='alert-item';
+  item.innerHTML=`<span class="alert-time">${time}</span><span>${msg}</span>`;
+  list.prepend(item);
+}
+function flashSuspicious(){
+  const el=document.getElementById('suspicious-flash');
+  el.classList.add('active');
+  setTimeout(()=>el.classList.remove('active'),700);
+}
+
+// ════════════════════════════════════════════════
+//  PROCTORING
+// ════════════════════════════════════════════════
+function startProctoring(){
+  state.examStarted=true;
+  // Attach camera
+  const vid=document.getElementById('cam-video');
+  if(state.mediaStream){ vid.srcObject=state.mediaStream; }
+
+  // Simulate face detection
+  state.faceSimInterval=setInterval(()=>{
+    if(state.examEnded) return;
+    const r=Math.random();
+    if(r<0.03){ // 3% chance multiple faces
+      state.faceCount=2+Math.floor(Math.random()*2);
+      triggerMultipleFaces();
+    } else if(r<0.07){ // 4% chance mobile detected
+      triggerMobileDetected();
+    } else {
+      state.faceCount=1;
+      hideBanners();
+      document.getElementById('face-label').className='cam-label ok';
+      document.getElementById('face-label').textContent='👤 1 face';
+    }
+  },8000);
+
+  // Simulate noise
+  state.noiseInterval=setInterval(()=>{
+    if(state.examEnded) return;
+    const noise=Math.random()*100;
+    state.noiseLevel=noise;
+    document.getElementById('noise-fill').style.width=noise+'%';
+    if(noise>70){
+      document.getElementById('noise-label').className='cam-label bad';
+      document.getElementById('noise-label').textContent='🔊 HIGH NOISE';
+      deductTrust(5,'High noise/talking detected');
+      toast('⚠️ Noise detected! Talking is not allowed.','danger');
+    } else if(noise>40){
+      document.getElementById('noise-label').className='cam-label bad';
+      document.getElementById('noise-label').textContent='🔊 noise';
+    } else {
+      document.getElementById('noise-label').className='cam-label ok';
+      document.getElementById('noise-label').textContent='🔇 quiet';
+    }
+  },15000);
+
+  // Look away detection (visibility API)
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('blur', handleWindowBlur);
+
+  // Draw face box on camera
+  drawFaceBox();
+}
+
+function handleVisibilityChange(){
+  if(state.examEnded) return;
+  if(document.hidden){
+    deductTrust(5,'Tab switch / Desktop change detected');
+    toast('⚠️ You switched tabs! This has been logged.','danger');
+  }
+}
+function handleWindowBlur(){
+  if(state.examEnded) return;
+  deductTrust(5,'Window lost focus - possible tab switch');
+  toast('⚠️ Window focus lost!','warn');
+}
+
+function triggerMultipleFaces(){
+  document.getElementById('face-label').className='cam-label bad';
+  document.getElementById('face-label').textContent=`👥 ${state.faceCount} faces!`;
+  document.getElementById('multiface-banner').classList.add('show');
+  deductTrust(5,'Multiple faces detected in camera');
+  toast('⚠️ Multiple faces detected!','danger');
+  setTimeout(()=>{ document.getElementById('multiface-banner').classList.remove('show'); },5000);
+}
+function triggerMobileDetected(){
+  document.getElementById('mobile-alert-banner').classList.add('show');
+  deductTrust(5,'Mobile phone detected near camera');
+  toast('⚠️ Mobile phone detected!','danger');
+  setTimeout(()=>{ document.getElementById('mobile-alert-banner').classList.remove('show'); },5000);
+}
+function hideBanners(){
+  document.getElementById('multiface-banner').classList.remove('show');
+  document.getElementById('mobile-alert-banner').classList.remove('show');
+}
+
+// Look away timer
+let lookAwayActive=false;
+function startLookAwayTracking(){
+  // Simulate using mouse movement as proxy for attention
+  let lastMove=Date.now();
+  document.addEventListener('mousemove',()=>{ lastMove=Date.now(); resetLookAway(); });
+  document.addEventListener('keydown',()=>{ lastMove=Date.now(); resetLookAway(); });
+  setInterval(()=>{
+    if(state.examEnded||!state.examStarted) return;
+    const away=(Date.now()-lastMove)/1000;
+    if(away>10 && !lookAwayActive){
+      lookAwayActive=true;
+      document.getElementById('lookaway-overlay').classList.add('active');
+      deductTrust(5,'Look-away detected (>10 seconds)');
+      toast('⚠️ Please look at your screen!','warn');
+    }
+  },1000);
+}
+function resetLookAway(){
+  lookAwayActive=false;
+  document.getElementById('lookaway-overlay').classList.remove('active');
+}
+
+function drawFaceBox(){
+  const canvas=document.getElementById('face-canvas');
+  const camBox=document.getElementById('cam-box');
+  if(!canvas||!camBox) return;
+  canvas.width=camBox.offsetWidth||240;
+  canvas.height=camBox.offsetHeight||180;
+  const ctx=canvas.getContext('2d');
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    if(state.faceCount>=1){
+      // Main face box
+      ctx.strokeStyle='rgba(0,229,255,0.8)'; ctx.lineWidth=2;
+      const x=canvas.width*.25,y=canvas.height*.1,w=canvas.width*.5,h=canvas.height*.6;
+      // Corner brackets
+      const cs=15;
+      ctx.beginPath();
+      ctx.moveTo(x,y+cs); ctx.lineTo(x,y); ctx.lineTo(x+cs,y);
+      ctx.moveTo(x+w-cs,y); ctx.lineTo(x+w,y); ctx.lineTo(x+w,y+cs);
+      ctx.moveTo(x,y+h-cs); ctx.lineTo(x,y+h); ctx.lineTo(x+cs,y+h);
+      ctx.moveTo(x+w-cs,y+h); ctx.lineTo(x+w,y+h); ctx.lineTo(x+w,y+h-cs);
+      ctx.stroke();
+      ctx.fillStyle='rgba(0,229,255,0.7)'; ctx.font='10px Share Tech Mono';
+      ctx.fillText('FACE_01 [VERIFIED]',x,y-4);
+    }
+    if(state.faceCount>=2){
+      ctx.strokeStyle='rgba(239,68,68,0.8)'; ctx.lineWidth=2;
+      const x2=canvas.width*.05,y2=canvas.height*.15,w2=canvas.width*.3,h2=canvas.height*.45;
+      const cs=10;
+      ctx.beginPath();
+      ctx.moveTo(x2,y2+cs); ctx.lineTo(x2,y2); ctx.lineTo(x2+cs,y2);
+      ctx.moveTo(x2+w2-cs,y2); ctx.lineTo(x2+w2,y2); ctx.lineTo(x2+w2,y2+cs);
+      ctx.moveTo(x2,y2+h2-cs); ctx.lineTo(x2,y2+h2); ctx.lineTo(x2+cs,y2+h2);
+      ctx.moveTo(x2+w2-cs,y2+h2); ctx.lineTo(x2+w2,y2+h2); ctx.lineTo(x2+w2,y2+h2-cs);
+      ctx.stroke();
+      ctx.fillStyle='rgba(239,68,68,0.9)'; ctx.font='10px Share Tech Mono';
+      ctx.fillText('⚠ FACE_02 [ALERT]',x2,y2-4);
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function stopAllMonitoring(){
+  if(state.timerInterval){ clearInterval(state.timerInterval); state.timerInterval=null; }
+  if(state.faceSimInterval){ clearInterval(state.faceSimInterval); state.faceSimInterval=null; }
+  if(state.noiseInterval){ clearInterval(state.noiseInterval); state.noiseInterval=null; }
+  document.removeEventListener('visibilitychange',handleVisibilityChange);
+  window.removeEventListener('blur',handleWindowBlur);
+  hideBanners();
+  document.getElementById('lookaway-overlay').classList.remove('active');
+  if(state.mediaStream){ state.mediaStream.getTracks().forEach(t=>t.stop()); state.mediaStream=null; }
+}
+
+// ════════════════════════════════════════════════
+//  SUBMIT / FINISH
+// ════════════════════════════════════════════════
+function confirmSubmit(){
+  const answered=Object.keys(state.answers).length;
+  const total=state.questions.length;
+  if(answered<total){
+    const ok=confirm(`You have answered ${answered}/${total} questions. Submit anyway?`);
+    if(!ok) return;
+  }
+  finishExam('submit');
+}
+function finishExam(reason){
+  if(state.examEnded) return;
+  state.examEnded=true;
+  stopAllMonitoring();
+  if(reason==='timeout') toast('⏰ Time is up! Exam submitted automatically.','warn');
+  buildResults();
+  showScreen('result-screen');
+}
+function terminateExam(){
+  state.examEnded=true;
+  stopAllMonitoring();
+  buildResults();
+  showScreen('terminated-screen');
+  playAlarm();
+}
+function playAlarm(){
+  try{
+    const ac=new (window.AudioContext||window.webkitAudioContext)();
+    function beep(freq,start,dur){
+      const o=ac.createOscillator(),g=ac.createGain();
+      o.connect(g); g.connect(ac.destination);
+      o.frequency.value=freq; o.type='sawtooth';
+      g.gain.setValueAtTime(.3,ac.currentTime+start);
+      g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+start+dur);
+      o.start(ac.currentTime+start); o.stop(ac.currentTime+start+dur);
+    }
+    for(let i=0;i<6;i++){ beep(880,i*.4,.3); beep(440,i*.4+.2,.15); }
+  } catch(e){}
+}
+
+// ════════════════════════════════════════════════
+//  RESULTS
+// ════════════════════════════════════════════════
+function buildResults(){
+  let correct=0;
+  state.questions.forEach((q,i)=>{ if(state.answers[i]===q.a) correct++; });
+  const pct=Math.round(correct/state.questions.length*100);
+  document.getElementById('res-score').textContent=pct+'%';
+  document.getElementById('res-score').style.color=pct>=50?'var(--accent3)':'var(--danger)';
+  document.getElementById('res-correct').textContent=correct+'/'+state.questions.length;
+  const tf=document.getElementById('res-trust-final');
+  tf.textContent=state.trustScore;
+  tf.style.color=state.trustScore>60?'var(--accent3)':state.trustScore>30?'var(--warn)':'var(--danger)';
+  document.getElementById('result-subtitle').textContent=
+    `${SUBJECTS[state.subject].label} • ${state.mode==='standard'?'Standard':'Practice'} Mode`;
+
+  // Cheating table
+  const tbody=document.getElementById('cheat-table-body');
+  if(state.violations.length===0){
+    tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--accent3);padding:2rem;">✅ No suspicious activity detected</td></tr>';
+  } else {
+    tbody.innerHTML='';
+    state.violations.forEach((v,i)=>{
+      const sev=v.deducted>=5?'HIGH':v.deducted>=3?'MEDIUM':'LOW';
+      const sevCls=sev==='HIGH'?'danger':sev==='MEDIUM'?'warn':'';
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${i+1}</td><td class="warn">${v.time}</td><td class="danger">${v.type}</td><td>Q${v.q}</td><td class="danger">-${v.deducted}</td><td class="${sevCls}"><span class="badge badge-${sev==='HIGH'?'danger':sev==='MEDIUM'?'warn':'info'}">${sev}</span></td>`;
+      tbody.appendChild(tr);
+    });
+  }
+  const total=state.violations.reduce((s,v)=>s+v.deducted,0);
+  document.getElementById('total-violations-badge').textContent=state.violations.length+' violations';
+  document.getElementById('total-deducted-badge').textContent='-'+total+' trust deducted';
+  if(state.violations.length>=3){
+    document.getElementById('reexam-badge').classList.remove('hidden');
+    document.getElementById('reexam-panel').classList.remove('hidden');
+  } else {
+    document.getElementById('reexam-panel').classList.add('hidden');
+  }
+
+  // Q review
+  const rev=document.getElementById('q-review-list'); rev.innerHTML='';
+  const keys=['A','B','C','D'];
+  state.questions.forEach((q,qi)=>{
+    const userAns=state.answers[qi];
+    const correct=q.a;
+    const isCorrect=userAns===correct;
+    const div=document.createElement('div');
+    div.className='card q-review mb2';
+    let optsHTML='<div class="review-opts">';
+    q.opts.forEach((opt,oi)=>{
+      let cls='unselected';
+      if(oi===correct) cls='correct';
+      if(oi===userAns&&oi!==correct) cls='wrong';
+      const icon=oi===correct?'✅':oi===userAns?'❌':'○';
+      optsHTML+=`<div class="review-opt ${cls}"><span class="review-icon">${icon}</span><strong>${keys[oi]})</strong> ${opt}</div>`;
+    });
+    optsHTML+='</div>';
+    div.innerHTML=`
+      <div class="q-review-header">
+        <span class="badge badge-info">Q${qi+1}</span>
+        <span class="badge ${isCorrect?'badge-success':'badge-danger'}">${isCorrect?'✅ Correct':'❌ Wrong'}</span>
+        ${userAns===undefined?'<span class="badge badge-warn">Skipped</span>':''}
+      </div>
+      <div class="q-review-text">${q.q}</div>
+      ${optsHTML}
+    `;
+    rev.appendChild(div);
+  });
+}
+function requestReExam(){ toast('Re-examination request sent to your teacher.','info'); }
+function printReport(){ window.print(); }
+
+// ════════════════════════════════════════════════
+//  TOAST
+// ════════════════════════════════════════════════
+function toast(msg,type='info'){
+  const c=document.getElementById('toast-container');
+  const icons={success:'✅',warn:'⚠️',danger:'🚨',info:'ℹ️'};
+  const t=document.createElement('div');
+  t.className=`toast toast-${type==='danger'?'danger':type}`;
+  t.textContent=icons[type]||'ℹ️'+' '+msg;
+  t.textContent=(icons[type]||'ℹ️')+' '+msg;
+  c.appendChild(t);
+  setTimeout(()=>t.remove(),4200);
+}
+
+// ════════════════════════════════════════════════
+//  INIT
+// ════════════════════════════════════════════════
+window.addEventListener('load',()=>{
+  startLookAwayTracking();
+});
+</script>
+</body>
+</html>
